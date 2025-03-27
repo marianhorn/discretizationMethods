@@ -23,7 +23,7 @@ def compute_errors_for_k(k, Nmax=300):
       - N_values[i] = i-th N in [2..Nmax]
       - max_errors[i] = maximum relative error for that N
     """
-    N_values = np.arange(2, Nmax + 1)
+    N_values = np.arange(2, Nmax + 1,2)
     max_errors = np.zeros_like(N_values, dtype=float)
 
     for idx, N in enumerate(N_values):
