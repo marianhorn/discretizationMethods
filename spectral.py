@@ -2,6 +2,8 @@ import gmpy2
 from gmpy2 import mpfr, sin, cos, exp, get_context
 import matplotlib.pyplot as plt
 
+# To run the simulation for install the packages by pip install gmpy2 matplotlib
+
 # Set precision (in bits)
 get_context().precision = 256
 
