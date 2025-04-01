@@ -8,18 +8,18 @@ import matplotlib.pyplot as plt
 get_context().precision = 256
 
 def build_fourier_diff_matrix(N):
-    D_tilde = [[mpfr(0) for _ in range(N)] for _ in range(N)]
-    pi = gmpy2.const_pi()
+    assert N % 2 == 1, "N must be odd for this Fourier method."
+    D = [[mpfr(0) for _ in range(N)] for _ in range(N)]
+    pi_val = gmpy2.const_pi()
 
     for j in range(N):
-        for i in range(N):
-            if i != j:
-                angle = pi * (j - i) / N
-                cot = lambda x: gmpy2.cos(x) / gmpy2.sin(x)
-                D_tilde[j][i] = mpfr(0.5) * (-1) ** (j - i) * cot(angle)
+        for k in range(N):
+            if j != k:
+                angle = pi_val * (j - k) / N
+                D[j][k] = mpfr(0.5) * (-1) ** (j - k) / gmpy2.sin(angle)
             else:
-                D_tilde[j][i] = mpfr(0)
-    return D_tilde
+                D[j][k] = mpfr(0)
+    return D
 
 def matvec_mult(D, u):
     N = len(u)
