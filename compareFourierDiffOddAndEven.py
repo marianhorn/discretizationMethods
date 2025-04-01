@@ -9,30 +9,39 @@ get_context().precision = 256
 
 def compute_max_error(method, N, k):
     pi_val = const_pi()
-    h = 2 * pi_val / mpfr(N)
-    x = [i * h for i in range(N)]
+
 
     if method == 'even':
-        D = fourierDiffEven.build_fourier_diff_matrix(N+1)
+        h = 2 * pi_val / mpfr(N)
+        x = [i * h for i in range(N)]
+        D = fourierDiffEven.build_fourier_diff_matrix(N)
+        u = [exp(k * sin(xi)) for xi in x]
+        u_exact = [k * cos(xi) * exp(k * sin(xi)) for xi in x]
+        u_approx = fourierDiffEven.matvec_mult(D, u)
+
+        rel_errors = [
+            abs(u_approx[i] - u_exact[i]) / abs(u_exact[i]) for i in range(N)
+        ]
     elif method == 'odd':
+        h = 2 * pi_val / mpfr(N+1)
+        x = [i * h for i in range(N+1)]
         D = fourierDiffOdd.build_fourier_diff_matrix(N)
+        u = [exp(k * sin(xi)) for xi in x]
+        u_exact = [k * cos(xi) * exp(k * sin(xi)) for xi in x]
+        u_approx = fourierDiffEven.matvec_mult(D, u)
+
+        rel_errors = [
+            abs(u_approx[i] - u_exact[i]) / abs(u_exact[i]) for i in range(N)
+        ]
     else:
         raise ValueError("Unknown method.")
 
-    u = [exp(k * sin(xi)) for xi in x]
-    u_exact = [k * cos(xi) * exp(k * sin(xi)) for xi in x]
-
-    u_approx = fourierDiffEven.matvec_mult(D, u)
-
-    rel_errors = [
-        abs(u_approx[i] - u_exact[i]) / abs(u_exact[i]) for i in range(N)
-    ]
     return float(max(rel_errors))
 
 
 def compare_methods(k_val=mpfr(2), Nmax=100):
-    N_even = list(range(2, Nmax, 2))
-    N_odd = list(range(3, Nmax + 1, 2))
+    N_even = list(range(1, Nmax, 2))
+    N_odd = list(range(2, Nmax+1, 2))
 
     even_errors = []
     odd_errors = []
@@ -67,4 +76,4 @@ def compare_methods(k_val=mpfr(2), Nmax=100):
         print(f"{ne:>4} | {err_e:15.4e} | {err_o:15.4e} | {winner}")
 
 if __name__ == "__main__":
-    compare_methods(k_val=mpfr(2), Nmax=100)
+    compare_methods(k_val=mpfr(2), Nmax=200)
