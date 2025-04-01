@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # Set precision (in bits)
 get_context().precision = 256
-
+#TODO: CHECK FORMULA: should be right, as it gives good results, but you never know
 def build_fourier_diff_matrix(N):
     assert N % 2 == 1, "N must be odd for this Fourier method."
     D = [[mpfr(0) for _ in range(N)] for _ in range(N)]
