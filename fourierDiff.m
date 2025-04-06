@@ -1,8 +1,8 @@
 function compare_fourier_diff_methods()
     k_vals = 2:2:12;
-    precision_digits = 100;
+    precision_digits = 50;
     tol = 1e-5;
-    maxN = 128;
+    maxN = 64;
 
     methods = {'even', 'odd'};
     colors = {'b', 'r'};
