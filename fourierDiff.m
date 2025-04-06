@@ -1,18 +1,74 @@
-function fourier_diff_driver()
+function compare_fourier_diff_methods()
     k_vals = 2:2:12;
-    tol = vpa(1e-5);
     precision_digits = 100;
+    tol = 1e-5;
+    maxN = 128;
 
-    method = 'odd';  % 'even' or 'odd'
+    methods = {'even', 'odd'};
+    colors = {'b', 'r'};  % for plotting
+    styles = {'-', '--'};
 
-    fprintf('Target: max relative error < %.0e using %d-digit precision (%s method)\n\n', ...
-        double(tol), precision_digits, method);
+    figure; hold on;
+    results = struct();
+
+    for m = 1:length(methods)
+        method = methods{m};
+        method_label = upper(method);
+        fprintf('\n--- Running method: %s ---\n', method_label);
+
+        res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN);
+
+        % Plot all curves
+        for k = k_vals
+            kstr = num2str(k);
+            semilogy(res.N_vals(kstr), res.max_errors(kstr), ...
+                styles{m}, 'Color', colors{m}, ...
+                'DisplayName', sprintf('%s k = %d', method_label, k));
+        end
+
+        results.(method) = res;
+    end
+
+    xlabel('N'); ylabel('Max Relative Error');
+    title('Fourier Spectral Differentiation: Even vs Odd Methods');
+    legend('Location', 'southwest');
+    grid on;
+
+    % Print comparison summary
+    fprintf('\n=== Summary of Minimal N for Error < %.0e ===\n', tol);
+    fprintf('%6s | %10s | %10s\n', 'k', 'Even N', 'Odd N');
+    fprintf('-----------------------------\n');
+    for k = k_vals
+        ke = results.even.minimal_N(num2str(k));
+        ko = results.odd.minimal_N(num2str(k));
+        fprintf('%6d | %10s | %10s\n', k, printN(ke), printN(ko));
+    end
+end
+
+function res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN)
+    digitsOld = digits();
+    digits(precision_digits);
+
+    tol = vpa(tol);
+    minimal_N = containers.Map();
+    all_errors = containers.Map();
+    all_N_vals = containers.Map();
 
     for k = k_vals
-        fprintf('Testing k = %d\n', k);
         found = false;
 
-        for N = 8:4:128
+        if strcmp(method, 'even')
+            N_range = 8:4:maxN;
+        elseif strcmp(method, 'odd')
+            N_range = 8:4:maxN;
+        else
+            error('Unknown method: %s. Use ''even'' or ''odd''.', method);
+        end
+
+        max_errors = zeros(size(N_range));
+
+        for idx = 1:length(N_range)
+            N = N_range(idx);
             [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method);
 
             u = exp(k * sin(x));
@@ -20,64 +76,74 @@ function fourier_diff_driver()
             du_num = D * u;
 
             rel_error = abs((du_num - du_true) ./ du_true);
-            max_rel_err = max(rel_error);
+            max_rel_err = double(max(rel_error));
+            max_errors(idx) = max_rel_err;
 
-            fprintf('  N = %3d | max relative error = %.2e\n', N, double(max_rel_err));
+            if mod(N, 10) == 0
+                fprintf('[DEBUG] method=%s, k=%d, N=%d: max_rel_error = %.3e\n', ...
+                        method, k, N, max_rel_err);
+            end
 
-            if max_rel_err < tol
-                fprintf('  ✅ Acceptable: N = %d meets error requirement for k = %d\n\n', N, k);
+            if ~found && max_rel_err < double(tol)
+                minimal_N(num2str(k)) = N;
                 found = true;
-                break;
             end
         end
 
         if ~found
-            fprintf('  ❌ No N found up to 128 for k = %d\n\n', k);
+            minimal_N(num2str(k)) = NaN;
         end
+
+        all_errors(num2str(k)) = max_errors;
+        all_N_vals(num2str(k)) = N_range;
     end
+
+    res.minimal_N = minimal_N;
+    res.max_errors = all_errors;
+    res.N_vals = all_N_vals;
+
+    digits(digitsOld);
 end
 
 
 function [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method)
-% High-precision Fourier differentiation matrix using Symbolic Toolbox
-% method: 'even' for cotangent method with N points
-%         'odd'  for sine-based method with N+1 points
+    digitsOld = digits();
+    digits(precision_digits);
 
-digitsOld = digits();
-digits(precision_digits);
-
-if strcmp(method, 'even')
-    % EVEN N: cotangent-based (standard periodic)
-    x = sym(2 * pi) / N * (0:N-1)';
-    D = sym(zeros(N));
-    for i = 1:N
-        for j = 1:N
-            if i ~= j
-                D(i, j) = 0.5 * (-1)^(i + j) * cot((x(i) - x(j)) / 2);
+    if strcmp(method, 'even')
+        x = sym(2 * pi) / N * (0:N-1)';
+        D = sym(zeros(N));
+        for i = 1:N
+            for j = 1:N
+                if i ~= j
+                    D(i, j) = 0.5 * (-1)^(i + j) * cot((x(i) - x(j)) / 2);
+                end
             end
         end
-    end
 
-elseif strcmp(method, 'odd')
-    % ODD case: sine-based with N+1 points
-    Nsym = sym(N + 1);  % adjust grid size
-    h = 2 * pi / Nsym;
-    x = h * (0:N)';  % grid from 0 to 2pi (N+1 points)
-
-    D = sym(zeros(N + 1));
-    for j = 0:N
-        for i = 0:N
-            if i ~= j
-                sign_factor = (-1)^(j + i);
-                angle = (j - i) * pi / Nsym;
-                D(j + 1, i + 1) = sign_factor / (2 * sin(angle));
+    elseif strcmp(method, 'odd')
+        Nsym = sym(N + 1);
+        h = 2 * pi / Nsym;
+        x = h * (0:N)';
+        D = sym(zeros(N + 1));
+        for j = 0:N
+            for i = 0:N
+                if i ~= j
+                    D(j + 1, i + 1) = (-1)^(i + j) / (2 * sin((j - i) * pi / Nsym));
+                end
             end
         end
+    else
+        error('Unknown method: %s. Use ''even'' or ''odd''.', method);
     end
 
-else
-    error('Unknown method: %s. Use ''even'' or ''odd''.', method);
+    digits(digitsOld);
 end
 
-digits(digitsOld);
+function s = printN(N)
+    if isnan(N)
+        s = '—';
+    else
+        s = num2str(N);
+    end
 end
