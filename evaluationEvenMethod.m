@@ -4,7 +4,7 @@ function analyze_fourier_convergence()
         parpool();
     end
 
-    precision_digits = 50;
+    precision_digits = 500;
     method = 'even';
     N_vals = 8:4:64;
 
@@ -12,7 +12,6 @@ function analyze_fourier_convergence()
     dfuncs = {@(x) -10*sin(10*x), @(x) -0.5*sin(x/2), @(x) ones(size(x))};
     labels = {'cos(10x)', 'cos(x/2)', 'x'};
 
-    figure;
     for f_idx = 1:length(funcs)
         f = funcs{f_idx};
         df = dfuncs{f_idx};
@@ -40,26 +39,39 @@ function analyze_fourier_convergence()
                 double(Linf_errors(i)), double(L2_errors(i)));
         end
 
-        subplot(1, 2, 1);
-        semilogy(N_vals, double(L2_errors), '-o', 'DisplayName', labels{f_idx});
-        hold on; xlabel('N'); ylabel('L2 error'); grid on; title('L2 Error');
+        % === Create figure for this function ===
+        figure('Name', sprintf('Error convergence: %s', label), 'NumberTitle', 'off');
 
+        % L2 plot
+        subplot(1, 2, 1);
+        semilogy(N_vals, double(L2_errors), '-o', 'LineWidth', 1.5);
+        xlabel('N'); ylabel('L2 error'); grid on;
+        title(sprintf('L2 Error – %s', label));
+
+        % Linf plot
         subplot(1, 2, 2);
-        semilogy(N_vals, double(Linf_errors), '-s', 'DisplayName', labels{f_idx});
-        hold on; xlabel('N'); ylabel('L∞ error'); grid on; title('L∞ Error');
+        semilogy(N_vals, double(Linf_errors), '-s', 'LineWidth', 1.5);
+        xlabel('N'); ylabel('L∞ error'); grid on;
+        title(sprintf('L∞ Error – %s', label));
     end
 
-    subplot(1, 2, 1); legend('Location', 'southwest');
-    subplot(1, 2, 2); legend('Location', 'southwest');
-
-    % Print error table
+    % === Print error summary table ===
     fprintf('\n%-12s | %-10s | %-15s | %-15s\n', 'Function', 'N', 'L∞ error', 'L2 error');
     fprintf('---------------------------------------------------------------\n');
     for f_idx = 1:length(funcs)
         label = labels{f_idx};
+        fprintf('%-12s\n', label);
         for i = 1:length(N_vals)
-            fprintf('%-12s | %4d        | %.3e         | %.3e\n', ...
-                label, N_vals(i), double(Linf_errors(i)), double(L2_errors(i)));
+            N = N_vals(i);
+            [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method);
+            fx = funcs{f_idx}(x);
+            dfx_true = dfuncs{f_idx}(x);
+            dfx_approx = D * fx;
+            err = abs(dfx_true - dfx_approx);
+            Linf_err = max(err);
+            L2_err = sqrt(sum(err.^2) / length(err));
+            fprintf('    N = %3d | L∞ error = %.3e | L2 error = %.3e\n', ...
+                N, double(Linf_err), double(L2_err));
         end
         fprintf('---------------------------------------------------------------\n');
     end
