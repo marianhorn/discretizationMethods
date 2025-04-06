@@ -5,8 +5,14 @@ function compare_fourier_diff_methods()
     maxN = 128;
 
     methods = {'even', 'odd'};
-    colors = {'b', 'r'};  % for plotting
+    colors = {'b', 'r'};
     styles = {'-', '--'};
+
+    % Start parallel pool if not already running
+    pool = gcp('nocreate');
+    if isempty(pool)
+        parpool();  % default: uses all available workers
+    end
 
     figure; hold on;
     results = struct();
@@ -18,7 +24,6 @@ function compare_fourier_diff_methods()
 
         res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN);
 
-        % Plot all curves
         for k = k_vals
             kstr = num2str(k);
             semilogy(res.N_vals(kstr), res.max_errors(kstr), ...
@@ -31,10 +36,9 @@ function compare_fourier_diff_methods()
 
     xlabel('N'); ylabel('Max Relative Error');
     title('Fourier Spectral Differentiation: Even vs Odd Methods');
-    legend('Location', 'southwest');
-    grid on;
+    legend('Location', 'southwest'); grid on;
 
-    % Print comparison summary
+    % Summary
     fprintf('\n=== Summary of Minimal N for Error < %.0e ===\n', tol);
     fprintf('%6s | %10s | %10s\n', 'k', 'Even N', 'Odd N');
     fprintf('-----------------------------\n');
@@ -43,6 +47,9 @@ function compare_fourier_diff_methods()
         ko = results.odd.minimal_N(num2str(k));
         fprintf('%6d | %10s | %10s\n', k, printN(ke), printN(ko));
     end
+
+    % Shut down parallel pool after computation
+    delete(gcp('nocreate'));
 end
 
 function res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN)
@@ -113,12 +120,16 @@ function [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method)
     if strcmp(method, 'even')
         x = sym(2 * pi) / N * (0:N-1)';
         D = sym(zeros(N));
-        for i = 1:N
+
+        % Parallelized row-wise loop
+        parfor i = 1:N
+            Drow = sym(zeros(1, N));  % must be local inside parfor
             for j = 1:N
                 if i ~= j
-                    D(i, j) = 0.5 * (-1)^(i + j) * cot((x(i) - x(j)) / 2);
+                    Drow(j) = 0.5 * (-1)^(i + j) * cot((x(i) - x(j)) / 2);
                 end
             end
+            D(i, :) = Drow;
         end
 
     elseif strcmp(method, 'odd')
@@ -126,19 +137,25 @@ function [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method)
         h = 2 * pi / Nsym;
         x = h * (0:N)';
         D = sym(zeros(N + 1));
-        for j = 0:N
+
+        % Parallelized row-wise loop
+        parfor j = 0:N
+            Drow = sym(zeros(1, N + 1));
             for i = 0:N
                 if i ~= j
-                    D(j + 1, i + 1) = (-1)^(i + j) / (2 * sin((j - i) * pi / Nsym));
+                    Drow(i + 1) = (-1)^(i + j) / (2 * sin((j - i) * pi / Nsym));
                 end
             end
+            D(j + 1, :) = Drow;
         end
+
     else
         error('Unknown method: %s. Use ''even'' or ''odd''.', method);
     end
 
     digits(digitsOld);
 end
+
 
 function s = printN(N)
     if isnan(N)
