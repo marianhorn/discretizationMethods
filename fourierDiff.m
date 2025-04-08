@@ -83,34 +83,37 @@ function res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, 
         end
 
         max_errors = zeros(size(N_range));
+        min_N = NaN;
 
-        for idx = 1:length(N_range)
+        % ✅ Parallelize over N values (coarse-grained parallelism)
+        parfor idx = 1:length(N_range)
             N = N_range(idx);
             [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method);
-
+        
             u = exp(k * sin(x));
             du_true = k * cos(x) .* exp(k * sin(x));
             du_num = D * u;
-
+        
             rel_error = abs((du_num - du_true) ./ du_true);
             max_rel_err = double(max(rel_error));
             max_errors(idx) = max_rel_err;
-
+        
             if mod(N, 10) == 0
                 fprintf('[DEBUG] method=%s, k=%d, N=%d: max_rel_error = %.3e\n', ...
                         method, k, N, max_rel_err);
             end
-
-            if ~found && max_rel_err < double(tol)
-                minimal_N(num2str(k)) = N;
-                found = true;
+        end
+        
+        % After the parfor: find the first N that meets the tolerance
+        min_N = NaN;
+        for idx = 1:length(N_range)
+            if max_errors(idx) < double(tol)
+                min_N = N_range(idx);
+                break;
             end
         end
 
-        if ~found
-            minimal_N(num2str(k)) = NaN;
-        end
-
+        minimal_N(num2str(k)) = min_N;
         all_errors(num2str(k)) = max_errors;
         all_N_vals(num2str(k)) = N_range;
     end
@@ -121,8 +124,6 @@ function res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, 
 
     digits(digitsOld);
 end
-
-
 function [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method)
     digitsOld = digits();
     digits(precision_digits);
@@ -130,16 +131,12 @@ function [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method)
     if strcmp(method, 'even')
         x = sym(2 * pi) / N * (0:N-1)';
         D = sym(zeros(N));
-
-        % Parallelized row-wise loop
-        parfor i = 1:N
-            Drow = sym(zeros(1, N));  % must be local inside parfor
+        for i = 1:N
             for j = 1:N
                 if i ~= j
-                    Drow(j) = 0.5 * (-1)^(i + j) * cot((x(i) - x(j)) / 2);
+                    D(i, j) = 0.5 * (-1)^(i + j) / tan((x(i) - x(j)) / 2);
                 end
             end
-            D(i, :) = Drow;
         end
 
     elseif strcmp(method, 'odd')
@@ -147,16 +144,12 @@ function [D, x] = fourier_diff_matrix_vpa(N, precision_digits, method)
         h = 2 * pi / Nsym;
         x = h * (0:N)';
         D = sym(zeros(N + 1));
-
-        % Parallelized row-wise loop
-        parfor j = 0:N
-            Drow = sym(zeros(1, N + 1));
+        for j = 0:N
             for i = 0:N
                 if i ~= j
-                    Drow(i + 1) = (-1)^(i + j) / (2 * sin((j - i) * pi / Nsym));
+                    D(j + 1, i + 1) = (-1)^(i + j) / (2 * sin((j - i) * pi / Nsym));
                 end
             end
-            D(j + 1, :) = Drow;
         end
 
     else
