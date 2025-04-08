@@ -76,13 +76,6 @@ function analyze_fourier_convergence()
         fprintf('---------------------------------------------------------------\n');
     end
 
-    % ✍️ Interpretation Section
-    fprintf('\nInterpretation:\n');
-    fprintf('- cos(10x): High frequency ⇒ needs more N to resolve accurately.\n');
-    fprintf('- cos(x/2): Low frequency ⇒ converges fast with fewer points.\n');
-    fprintf('- x: Not periodic ⇒ slow convergence due to discontinuity in periodic extension.\n');
-    fprintf('  Try subtracting the linear part or using non-periodic methods to improve.\n');
-
     % Clean up parallel pool
     delete(gcp('nocreate'));
 end
