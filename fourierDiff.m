@@ -1,5 +1,5 @@
 function compare_fourier_diff_methods()
-    k_vals = 2:2:12;
+    k_vals = 2:2:6;
     precision_digits = 50;
     tol = 1e-5;
     maxN = 64;
@@ -13,30 +13,40 @@ function compare_fourier_diff_methods()
     if isempty(pool)
         parpool();  % default: uses all available workers
     end
-
     figure; hold on;
     results = struct();
-
+    
+    % Generate a colormap for different k values
+    k_colors = lines(length(k_vals));  % MATLAB's built-in distinct color set
+    
     for m = 1:length(methods)
         method = methods{m};
         method_label = upper(method);
+        style = styles{m};  % '-' for even, '--' for odd
         fprintf('\n--- Running method: %s ---\n', method_label);
-
+    
         res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN);
-
-        for k = k_vals
+    
+        for idx = 1:length(k_vals)
+            k = k_vals(idx);
             kstr = num2str(k);
+            color = k_colors(idx, :);
+    
             semilogy(res.N_vals(kstr), res.max_errors(kstr), ...
-                styles{m}, 'Color', colors{m}, ...
-                'DisplayName', sprintf('%s k = %d', method_label, k));
+                style, 'Color', color, ...
+                'DisplayName', sprintf('%s, k = %d', method_label, k));
         end
-
+    
         results.(method) = res;
     end
-
-    xlabel('N'); ylabel('Max Relative Error');
+    
+    xlabel('N');
+    ylabel('Max Relative Error');
     title('Fourier Spectral Differentiation: Even vs Odd Methods');
-    legend('Location', 'southwest'); grid on;
+    legend('Location', 'northeast');  % Top-right corner
+    grid on;
+    
+    ylim([1e-80, 1e2]);  % You can adjust this if needed
 
     % Summary
     fprintf('\n=== Summary of Minimal N for Error < %.0e ===\n', tol);
@@ -65,9 +75,9 @@ function res = run_fourier_diff_analysis(k_vals, precision_digits, tol, method, 
         found = false;
 
         if strcmp(method, 'even')
-            N_range = 8:4:maxN;
+            N_range = 8:2:maxN;
         elseif strcmp(method, 'odd')
-            N_range = 8:4:maxN;
+            N_range = 8:2:maxN;
         else
             error('Unknown method: %s. Use ''even'' or ''odd''.', method);
         end
