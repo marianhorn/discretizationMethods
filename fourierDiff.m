@@ -1,8 +1,8 @@
 function compare_fourier_diff_methods()
-    k_vals = 2:2:6;
+    k_vals = 2:2:12;
     precision_digits = 50;
     tol = 1e-5;
-    maxN = 64;
+    maxN = 256;
 
     methods = {'even', 'odd'};
     colors = {'b', 'r'};
@@ -45,8 +45,10 @@ function compare_fourier_diff_methods()
     title('Fourier Spectral Differentiation: Even vs Odd Methods');
     legend('Location', 'northeast');  % Top-right corner
     grid on;
-    
-    ylim([1e-80, 1e2]);  % You can adjust this if needed
+
+    set(gca, 'YScale', 'log');
+
+    ylim([1e-80, 1e10]);  % You can adjust this if needed
 
     % Summary
     fprintf('\n=== Summary of Minimal N for Error < %.0e ===\n', tol);
