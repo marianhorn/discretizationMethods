@@ -44,7 +44,7 @@ function analyze_fourier_convergence()
 
         % L2 plot
         subplot(1, 2, 1);
-        semilogy(N_vals, double(L2_errors), '-o', 'LineWidth', 1.5);
+        semilogy(N_vals, double(vpa(L2_errors, 50)), '-o', 'LineWidth', 1.5);
         xlabel('N'); ylabel('L2 error'); grid on;
         title(sprintf('L2 Error – %s', label));
 
@@ -70,8 +70,9 @@ function analyze_fourier_convergence()
             err = abs(dfx_true - dfx_approx);
             Linf_err = max(err);
             L2_err = sqrt(sum(err.^2) / length(err));
-            fprintf('    N = %3d | L∞ error = %.3e | L2 error = %.3e\n', ...
-                N, double(Linf_err), double(L2_err));
+            fprintf('    N = %3d | L∞ error = %s | L2 error = %s\n', ...
+                N, char(vpa(Linf_err, 16)), char(vpa(L2_err, 16)));
+
         end
         fprintf('---------------------------------------------------------------\n');
     end

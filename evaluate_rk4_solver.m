@@ -1,4 +1,4 @@
-clear; clc;
+clear;
 
 % === Parameters ===
 N = 128;                   % grid points
@@ -9,7 +9,7 @@ dt = 0.001;
 T = 1.0;
 steps = round(T / dt);
 
-method = 'fd4';        % 'fd2', 'fd4', or 'fourier'
+method = 'fourier';        % 'fd2', 'fd4', or 'fourier'
 precision_digits = 50;     % only relevant for 'fourier'
 
 % === Initial condition ===
