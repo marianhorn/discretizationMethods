@@ -46,13 +46,16 @@ def fourier_diff_matrix_vpa(N, precision_digits, method):
     if method == 'odd':
         Nsym = N + 1
         h = mpmath.mpf(2) * mpmath.pi / Nsym
-        x = [h * i for i in range(Nsym)]
-        D = [[mpmath.mpf(0) for _ in range(Nsym)] for _ in range(Nsym)]
+        x_full = [h * i for i in range(Nsym)]
+        D_full = [[mpmath.mpf(0) for _ in range(Nsym)] for _ in range(Nsym)]
         for j in range(Nsym):
             for i in range(Nsym):
                 if i != j:
-                    D[j][i] = (-1) ** (i + j) / (2 * mpmath.sin((j - i) * mpmath.pi / Nsym))
-        return D[:-1], x[:-1]  # Truncate to NxN
+                    D_full[j][i] = (-1) ** (i + j) / (2 * mpmath.sin((j - i) * mpmath.pi / Nsym))
+        # Truncate matrix and grid to size N
+        D = [row[:N] for row in D_full[:N]]
+        x = x_full[:N]
+        return D, x
     else:
         raise ValueError("Only 'odd' method is supported for Fourier")
 
@@ -66,7 +69,7 @@ dt = 0.001
 T = 1.0
 steps = round(T / dt)
 
-method = 'fourier'  # 'fd2', 'fd4', or 'fourier'
+method = 'fd4'  # 'fd2', 'fd4', or 'fourier'
 precision_digits = 50
 
 # === Initial condition ===
