@@ -4,7 +4,7 @@ function analyze_fourier_convergence()
         parpool();
     end
 
-    precision_digits = 500;
+    precision_digits = 50;
     method = 'even';
     N_vals = 8:4:64;
 

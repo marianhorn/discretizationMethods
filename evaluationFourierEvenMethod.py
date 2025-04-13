@@ -26,7 +26,7 @@ def linf_error(approx, exact):
     return float(max(abs(a - e) for a, e in zip(approx, exact)))
 
 def l2_error(approx, exact):
-    return float(gmpy2.sqrt(sum((a - e) ** 2 for a, e in zip(approx, exact)) / len(approx)))
+    return float(gmpy2.sqrt(sum((a - e) ** 2 for a, e in zip(approx, exact))))
 
 def analyze_function(name, f_dict, N_values):
     L2_errors = []
@@ -61,7 +61,7 @@ def plot_errors(N_values, linf, l2, func_name):
     plt.show()
 
 def main():
-    N_values = list(range(23, 100 + 1, 2))  # Odd N
+    N_values = list(range(3, 100 + 1, 2))  # Odd N
 
     for name, f_dict in functions.items():
         linf, l2 = analyze_function(name, f_dict, N_values)
