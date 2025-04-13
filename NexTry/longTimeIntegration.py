@@ -1,13 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from math import log2
-from mpmath import mp, sin, exp, pi, mpf
+from mpmath import mp, mpf, sin, exp, pi
 from joblib import Parallel, delayed
 from RungeKutta import rk4_solver_matrix
 
 
-def simulate_one_case(N, T, dt, method, precision_digits):
+def simulate_one_case(N, T_float, dt_float, method, precision_digits):
     mp.dps = precision_digits
+    T = mpf(T_float)
+    dt = mpf(dt_float)
+
     steps = int(mp.nint(T / dt))
     u_all, x = rk4_solver_matrix(N, float(dt), steps, method, precision_digits)
     x_mp = [mpf(xi) for xi in x]
@@ -19,8 +22,8 @@ def simulate_one_case(N, T, dt, method, precision_digits):
 
 def convergence_study_high_precision_parallel():
     N_vals = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
-    T = mp.pi
-    dt = mpf("0.001")
+    T_float = float(mp.pi)
+    dt_float = 0.001
     precision_digits = 70
     mp.dps = precision_digits
 
@@ -29,8 +32,8 @@ def convergence_study_high_precision_parallel():
     for method in methods:
         print(f"\n--- Running parallel convergence study for method: {method} ---")
 
-        results = Parallel(n_jobs=-1, backend="loky")(
-            delayed(simulate_one_case)(N, T, dt, method, precision_digits)
+        results = Parallel(n_jobs=-1, backend="multiprocessing")(
+            delayed(simulate_one_case)(N, T_float, dt_float, method, precision_digits)
             for N in N_vals
         )
 
