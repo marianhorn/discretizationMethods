@@ -22,10 +22,13 @@ def evaluate_long_time_transport():
         N = scheme["N"]
         label = scheme["label"]
 
+        print(f"\n>>> Starting scheme: {label} (method = '{method}', N = {N})")
+
         fig, axs = plt.subplots(1, len(times), figsize=(15, 4))
         fig.suptitle(f"{label} – Comparison at t = 0, 100, 200 (N = {N})")
 
         for i, T in enumerate(times):
+            print(f"  → Evaluating at t = {T}")
             steps = int(mp.nint(T / dt))
             u_all, x = rk4_solver_matrix(N, float(dt), steps, method, precision_digits)
             x_mp = [mpf(xi) for xi in x]
