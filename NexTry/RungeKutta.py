@@ -4,40 +4,56 @@ import matplotlib.pyplot as plt
 
 
 def rk4_solver_matrix(N, dt, steps, method='fourier', precision_digits=50):
-    # === Grid and initial condition ===
-    L = 2 * np.pi
-    x = np.linspace(0, L, N, endpoint=False)  # Periodic grid
-    u = np.exp(np.sin(x))
-    u_all = np.zeros((N, steps + 1))
-    u_all[:, 0] = u.copy()
+    mpmath.mp.dps = precision_digits
+    dt = mpmath.mpf(dt)
 
-    # === Setup differentiation operator ===
+    L = mpmath.mpf(2) * mpmath.pi
+    x = [L * i / N for i in range(N)]
+    u = [mpmath.exp(mpmath.sin(xi)) for xi in x]
+    u_all = [[ui] for ui in u]
+
     if method == 'fourier':
         D, _ = fourier_diff_matrix_vpa(N, precision_digits, 'odd')
-        D = np.array([[float(entry) for entry in row] for row in D])
-    else:
+        D = [[mpmath.mpf(dij) for dij in row] for row in D]
+
+        def compute_rhs(u_in):
+            return [-2 * mpmath.pi * sum(D[i][j] * u_in[j] for j in range(N)) for i in range(N)]
+
+    elif method in ['fd2', 'fd4']:
         dx = x[1] - x[0]
 
-    # === Time stepping ===
-    for n in range(steps):
         def compute_rhs(u_in):
-            if method == 'fd2':
-                return -2 * np.pi * (np.roll(u_in, -1) - np.roll(u_in, 1)) / (2 * dx)
-            elif method == 'fd4':
-                return -2 * np.pi * (-np.roll(u_in, 2) + 8 * np.roll(u_in, 1)
-                                     - 8 * np.roll(u_in, -1) + np.roll(u_in, -2)) / (12 * dx)
-            elif method == 'fourier':
-                return -2 * np.pi * D @ u_in
-            else:
-                raise ValueError("Unknown method")
+            rhs = []
+            for i in range(N):
+                if method == 'fd2':
+                    val = (-2 * mpmath.pi *
+                           (u_in[(i + 1) % N] - u_in[(i - 1) % N]) / (2 * dx))
+                elif method == 'fd4':
+                    val = (-2 * mpmath.pi *
+                           (-u_in[(i + 2) % N] + 8 * u_in[(i + 1) % N]
+                            - 8 * u_in[(i - 1) % N] + u_in[(i - 2) % N]) / (12 * dx))
+                rhs.append(val)
+            return rhs
 
-        u1 = u + 0.5 * dt * compute_rhs(u)
-        u2 = u + 0.5 * dt * compute_rhs(u1)
-        u3 = u + dt * compute_rhs(u2)
-        u = (1 / 3) * (-u + u1 + 2 * u2 + u3 + 0.5 * dt * compute_rhs(u3))
+    else:
+        raise ValueError("Unknown method")
 
-        u_all[:, n + 1] = u
+    for _ in range(steps):
+        F = compute_rhs(u)
+        u1 = [u[i] + mpmath.mpf('0.5') * dt * F[i] for i in range(N)]
+        F1 = compute_rhs(u1)
+        u2 = [u[i] + mpmath.mpf('0.5') * dt * F1[i] for i in range(N)]
+        F2 = compute_rhs(u2)
+        u3 = [u[i] + dt * F2[i] for i in range(N)]
+        F3 = compute_rhs(u3)
 
+        u = [(mpmath.mpf('1') / 3) * (-u[i] + u1[i] + 2 * u2[i] + u3[i] + mpmath.mpf('0.5') * dt * F3[i])
+             for i in range(N)]
+        for i in range(N):
+            u_all[i].append(u[i])
+
+    u_all = np.array([[float(val) for val in row] for row in u_all])
+    x = np.array([float(xi) for xi in x])
     return u_all, x
 
 
@@ -52,7 +68,6 @@ def fourier_diff_matrix_vpa(N, precision_digits, method):
             for i in range(Nsym):
                 if i != j:
                     D_full[j][i] = (-1) ** (i + j) / (2 * mpmath.sin((j - i) * mpmath.pi / Nsym))
-        # Truncate matrix and grid to size N
         D = [row[:N] for row in D_full[:N]]
         x = x_full[:N]
         return D, x
@@ -60,47 +75,46 @@ def fourier_diff_matrix_vpa(N, precision_digits, method):
         raise ValueError("Only 'odd' method is supported for Fourier")
 
 
-# === Parameters ===
-N = 512
-L = 2 * np.pi
-x = np.linspace(0, L, N, endpoint=False)
-dx = x[1] - x[0]
-dt = 0.001
-T = 4.0
-steps = round(T / dt)
+def main():
+    # === Parameters ===
+    N = 128
+    dt = 0.001
+    T = 2.0
+    steps = round(T / dt)
+    method = 'fourier'  # 'fd2', 'fd4', or 'fourier'
+    precision_digits = 50
 
-method = 'fourier'  # 'fd2', 'fd4', or 'fourier'
-precision_digits = 50
+    # === Run RK4 solver ===
+    u_all, x = rk4_solver_matrix(N, dt, steps, method, precision_digits)
+    u_final = u_all[:, -1]
 
-# === Initial condition ===
-u0 = np.exp(np.sin(x))
+    # === Exact solution at t = T ===
+    x_mp = [mpmath.mpf(xi) for xi in x]
+    u_exact = np.array([float(mpmath.exp(mpmath.sin(xi - 2 * mpmath.pi * T))) for xi in x_mp])
 
-# === Run RK4 solver ===
-u_all, x = rk4_solver_matrix(N, dt, steps, method, precision_digits)
-u_final = u_all[:, -1]
+    # === Error metrics ===
+    error_Linf = np.max(np.abs(u_final - u_exact))
+    error_L2 = np.sqrt(np.mean((u_final - u_exact) ** 2))
 
-# === Exact solution at t = T ===
-u_exact = np.exp(np.sin(x - 2 * np.pi * T))
+    print('--- RK4 Evaluation ---')
+    print(f'Method: {method}')
+    print(f'Grid points N: {N}')
+    print(f'Final time T: {T:.2f}')
+    print(f'L-infinity error: {error_Linf:.3e}')
+    print(f'L2 error:         {error_L2:.3e}')
 
-# === Error metrics ===
-error_Linf = np.max(np.abs(u_final - u_exact))
-error_L2 = np.sqrt(np.mean((u_final - u_exact) ** 2))
+    # === Plotting ===
+    plt.figure(figsize=(10, 5))
+    plt.plot(x, u_final, 'b-', label='Numerical')
+    plt.plot(x, u_exact, 'r--', label='Exact')
+    plt.title(f'RK4 Solution vs Exact at t = {T:.2f}')
+    plt.xlabel('x')
+    plt.ylabel('u(x)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
-print('--- RK4 Evaluation ---')
-print(f'Method: {method}')
-print(f'Grid points N: {N}')
-print(f'Final time T: {T:.2f}')
-print(f'L-infinity error: {error_Linf:.3e}')
-print(f'L2 error:         {error_L2:.3e}')
 
-# === Plotting ===
-plt.figure(figsize=(10, 5))
-plt.plot(x, u_final, 'b-', label='Numerical')
-plt.plot(x, u_exact, 'r--', label='Exact')
-plt.title(f'RK4 Solution vs Exact at t = {T:.2f}')
-plt.xlabel('x')
-plt.ylabel('u(x)')
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+if __name__ == "__main__":
+    main()
