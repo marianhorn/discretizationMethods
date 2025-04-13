@@ -24,7 +24,7 @@ def convergence_study_high_precision_parallel():
     N_vals = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
     T_float = float(mp.pi)
     dt_float = 0.001
-    precision_digits = 70
+    precision_digits = 100
     mp.dps = precision_digits
 
     methods = ['fd2', 'fd4', 'fourier']
