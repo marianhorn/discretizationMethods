@@ -36,9 +36,10 @@ def compare_fourier_diff_methods():
     plt.title('Fourier Spectral Differentiation: Even vs Odd Methods')
     plt.grid(True)
     plt.yscale('log')
-    plt.ylim(1e-80, 1e10)
-    plt.legend(loc='upper right')
+    plt.ylim(1e-55, 1e10)  # Updated y-limits
+    plt.legend(loc='lower left')  # Moved legend
     plt.show()
+
 
     # Summary
     print(f"\n=== Summary of Minimal N for Error < {float(tol):.0e} ===")
