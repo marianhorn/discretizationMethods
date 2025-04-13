@@ -61,15 +61,15 @@ def fourier_diff_matrix_vpa(N, precision_digits, method):
 
 
 # === Parameters ===
-N = 128
+N = 512
 L = 2 * np.pi
 x = np.linspace(0, L, N, endpoint=False)
 dx = x[1] - x[0]
 dt = 0.001
-T = 1.0
+T = 4.0
 steps = round(T / dt)
 
-method = 'fd4'  # 'fd2', 'fd4', or 'fourier'
+method = 'fourier'  # 'fd2', 'fd4', or 'fourier'
 precision_digits = 50
 
 # === Initial condition ===
