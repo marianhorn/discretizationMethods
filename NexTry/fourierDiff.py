@@ -8,7 +8,7 @@ def compare_fourier_diff_methods():
     k_vals = list(range(2, 14, 2))  # k = 2, 4, ..., 12
     precision_digits = 50
     tol = mpmath.mpf("1e-5")
-    maxN = 128
+    maxN = 256
 
     methods = ['even', 'odd']
     styles = ['-', '--']
@@ -58,7 +58,7 @@ def run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN):
     all_N_vals = {}
 
     for k in k_vals:
-        N_range = list(range(8, maxN + 1, 2))
+        N_range = list(range(2, maxN + 1, 4))
         args_list = [(N, k, precision_digits, method) for N in N_range]
 
         with Pool(processes=cpu_count()) as pool:
