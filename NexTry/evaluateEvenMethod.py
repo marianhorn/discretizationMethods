@@ -7,7 +7,7 @@ def analyze_fourier_convergence():
 
     precision_digits = 50
     method = 'even'
-    N_vals = list(range(8, 65, 4))  # N = 8, 12, ..., 64
+    N_vals = list(range(8, 256, 4))  # N = 8, 12, ..., 64
 
     funcs = [
         lambda x: [mpmath.cos(10 * xi) for xi in x],
