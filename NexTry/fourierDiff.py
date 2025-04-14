@@ -58,7 +58,7 @@ def run_fourier_diff_analysis(k_vals, precision_digits, tol, method, maxN):
     all_N_vals = {}
 
     for k in k_vals:
-        N_range = list(range(2, maxN + 1, 4))
+        N_range = list(range(2, maxN + 1, 2))
         args_list = [(N, k, precision_digits, method) for N in N_range]
 
         with Pool(processes=cpu_count()) as pool:
