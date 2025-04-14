@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def analyze_fourier_convergence():
-    mpmath.mp.dps = 50  # digits of precision
+    mpmath.mp.dps = 50
 
     precision_digits = 50
     method = 'even'
@@ -44,7 +44,7 @@ def analyze_fourier_convergence():
 
             print(f"[DEBUG]    Linf error = {float(Linf):.3e} | L2 error = {float(L2):.3e}")
 
-        # Plotting
+        #Plotting
         fig, axs = plt.subplots(1, 2, figsize=(12, 5))
         fig.suptitle(f'Error convergence: {label}', fontsize=14)
 
@@ -63,7 +63,6 @@ def analyze_fourier_convergence():
         plt.tight_layout()
         plt.show()
 
-        # Summary Table
         print(f"\n{'Function':<12} | {'N':<10} | {'L∞ error':<15} | {'L2 error':<15}")
         print('-' * 60)
         for N, Linf, L2 in zip(N_vals, Linf_errors, L2_errors):

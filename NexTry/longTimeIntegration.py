@@ -5,13 +5,12 @@ from RungeKutta import rk4_solver_matrix
 
 
 def evaluate_long_time_transport():
-    # === High precision setup ===
+
     precision_digits = 70
     mp.dps = precision_digits
     dt = mpf("0.001")
     times = [0, 100, 200]
 
-    # === Two configurations to compare ===
     schemes = [
         {"method": "fd2", "N": 200, "label": "2nd Order FD"},
         {"method": "fourier", "N": 10, "label": "Infinite Order (Fourier)"}
@@ -33,11 +32,10 @@ def evaluate_long_time_transport():
             u_all, x = rk4_solver_matrix(N, float(dt), steps, method, precision_digits)
             x_mp = [mpf(xi) for xi in x]
 
-            # Compute exact solution
+
             u_exact = np.array([float(exp(sin(xi - 2 * pi * T))) for xi in x_mp])
             u_num = u_all[:, -1]
 
-            # Plotting
             axs[i].plot(x, u_num, 'bo-', label='Numerical')  # blue circles
             axs[i].plot(x, u_exact, 'r--x', label='Exact')    # red dashed line with x markers
             axs[i].set_title(f"t = {T}")

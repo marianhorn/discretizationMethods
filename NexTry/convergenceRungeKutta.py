@@ -44,10 +44,9 @@ def convergence_study_high_precision_parallel():
             rate = log2(error_list[i - 1] / error_list[i])
             rates.append(rate)
 
-        # === Plotting ===
         plt.loglog(N_list, error_list, '-o', label=method.upper())
 
-        # === Print convergence table ===
+
         print(f"\nMethod: {method.upper()}")
         print(f"{'N':>6} | {'Error':>12} | {'Rate':>6}")
         print('-' * 30)
@@ -57,7 +56,6 @@ def convergence_study_high_precision_parallel():
             else:
                 print(f"{N:6d} | {err:12.4e} |   ---")
 
-    # === Final plot formatting ===
     plt.xlabel('N (grid points)')
     plt.ylabel('L∞ error')
     plt.title('High-Precision RK4 Convergence at T = π')
