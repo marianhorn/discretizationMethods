@@ -38,8 +38,8 @@ def evaluate_long_time_transport():
             u_num = u_all[:, -1]
 
             # Plotting
-            axs[i].plot(x, u_num, 'b-', label='Numerical')
-            axs[i].plot(x, u_exact, 'r--', label='Exact')
+            axs[i].plot(x, u_num, 'bo-', label='Numerical')  # blue circles
+            axs[i].plot(x, u_exact, 'r--x', label='Exact')    # red dashed line with x markers
             axs[i].set_title(f"t = {T}")
             axs[i].set_xlabel('x')
             axs[i].set_ylabel('u(x)')
