@@ -7,19 +7,23 @@ def rk4_solver_matrix(N, dt, steps, method='fourier', precision_digits=50):
     mpmath.mp.dps = precision_digits
     dt = mpmath.mpf(dt)
 
-    L = mpmath.mpf(2) * mpmath.pi
-    x = [L * i / N for i in range(N)]
-    u = [mpmath.exp(mpmath.sin(xi)) for xi in x]
-    u_all = [[ui] for ui in u]
-
     if method == 'fourier':
-        D, _ = fourier_diff_matrix_vpa(N, precision_digits, 'odd')
+        N_full = N + 1
+        D, x = fourier_diff_matrix_vpa(N_full, precision_digits, 'odd')
         D = [[mpmath.mpf(dij) for dij in row] for row in D]
+        u = [mpmath.exp(mpmath.sin(xi)) for xi in x]
+        u_all = [[ui] for ui in u]
 
         def compute_rhs(u_in):
-            return [-2 * mpmath.pi * sum(D[i][j] * u_in[j] for j in range(N)) for i in range(N)]
+            return [-2 * mpmath.pi * sum(D[i][j] * u_in[j] for j in range(N_full)) for i in range(N_full)]
+
+        N_used = N_full  # Use full size for iteration
 
     elif method in ['fd2', 'fd4']:
+        L = mpmath.mpf(2) * mpmath.pi
+        x = [L * i / N for i in range(N)]
+        u = [mpmath.exp(mpmath.sin(xi)) for xi in x]
+        u_all = [[ui] for ui in u]
         dx = x[1] - x[0]
 
         def compute_rhs(u_in):
@@ -35,21 +39,23 @@ def rk4_solver_matrix(N, dt, steps, method='fourier', precision_digits=50):
                 rhs.append(val)
             return rhs
 
+        N_used = N
+
     else:
         raise ValueError("Unknown method")
 
     for _ in range(steps):
         F = compute_rhs(u)
-        u1 = [u[i] + mpmath.mpf('0.5') * dt * F[i] for i in range(N)]
+        u1 = [u[i] + mpmath.mpf('0.5') * dt * F[i] for i in range(N_used)]
         F1 = compute_rhs(u1)
-        u2 = [u[i] + mpmath.mpf('0.5') * dt * F1[i] for i in range(N)]
+        u2 = [u[i] + mpmath.mpf('0.5') * dt * F1[i] for i in range(N_used)]
         F2 = compute_rhs(u2)
-        u3 = [u[i] + dt * F2[i] for i in range(N)]
+        u3 = [u[i] + dt * F2[i] for i in range(N_used)]
         F3 = compute_rhs(u3)
 
         u = [(mpmath.mpf('1') / 3) * (-u[i] + u1[i] + 2 * u2[i] + u3[i] + mpmath.mpf('0.5') * dt * F3[i])
-             for i in range(N)]
-        for i in range(N):
+             for i in range(N_used)]
+        for i in range(N_used):
             u_all[i].append(u[i])
 
     u_all = np.array([[float(val) for val in row] for row in u_all])
@@ -60,16 +66,13 @@ def rk4_solver_matrix(N, dt, steps, method='fourier', precision_digits=50):
 def fourier_diff_matrix_vpa(N, precision_digits, method):
     mpmath.mp.dps = precision_digits
     if method == 'odd':
-        Nsym = N + 1
-        h = mpmath.mpf(2) * mpmath.pi / Nsym
-        x_full = [h * i for i in range(Nsym)]
-        D_full = [[mpmath.mpf(0) for _ in range(Nsym)] for _ in range(Nsym)]
-        for j in range(Nsym):
-            for i in range(Nsym):
+        h = mpmath.mpf(2) * mpmath.pi / N
+        x = [h * i for i in range(N)]
+        D = [[mpmath.mpf(0) for _ in range(N)] for _ in range(N)]
+        for j in range(N):
+            for i in range(N):
                 if i != j:
-                    D_full[j][i] = (-1) ** (i + j) / (2 * mpmath.sin((j - i) * mpmath.pi / Nsym))
-        D = [row[:N] for row in D_full[:N]]
-        x = x_full[:N]
+                    D[j][i] = (-1) ** (i + j) / (2 * mpmath.sin((j - i) * mpmath.pi / N))
         return D, x
     else:
         raise ValueError("Only 'odd' method is supported for Fourier")
@@ -77,7 +80,7 @@ def fourier_diff_matrix_vpa(N, precision_digits, method):
 
 def main():
     # === Parameters ===
-    N = 128
+    N = 64
     dt = 0.001
     T = 2.0
     steps = round(T / dt)

@@ -21,14 +21,16 @@ def simulate_one_case(N, T_float, dt_float, method, precision_digits):
 
 
 def convergence_study_high_precision_parallel():
-    N_vals = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+   # N_vals = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+    N_vals = [8, 16, 32, 64, 128]
+
     T_float = float(mp.pi)
-    dt_float = 0.001
-    precision_digits = 100
+    dt_float = 0.0001
+    precision_digits = 15
     mp.dps = precision_digits
 
-    methods = ['fd2', 'fd4', 'fourier']
-
+   # methods = ['fd2', 'fd4', 'fourier']
+    methods = [ 'fd2','fourier']
     for method in methods:
         print(f"\n--- Running parallel convergence study for method: {method} ---")
 
