@@ -7,21 +7,27 @@ from FP_RungeKutta import rk4_solver_matrix
 
 def simulate_one_case(N, T, dt, method):
     steps = int(round(T / dt))
-    u_all, x = rk4_solver_matrix(N, dt, steps, method)
-    u_num = u_all[:, -1]
+    u_num, x = rk4_solver_matrix(N, dt, steps, method)
     u_exact = np.exp(np.sin(x - 2 * np.pi * T))
     error = np.max(np.abs(u_num - u_exact))
     return N, error
 
 
 def convergence_study_float64():
-    N_vals = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+    N_vals_full = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+
     T = np.pi
-    dt = 0.000000001
+    dt = 1e-6
     methods = ['fd2', 'fd4', 'fourier']
 
     for method in methods:
         print(f"\n--- Running parallel convergence study for method: {method} ---")
+
+        # Skip large Ns for Fourier
+        if method == 'fourier':
+            N_vals = [N for N in N_vals_full if N < 512]
+        else:
+            N_vals = N_vals_full
 
         results = Parallel(n_jobs=-1, backend="multiprocessing")(
             delayed(simulate_one_case)(N, T, dt, method) for N in N_vals
