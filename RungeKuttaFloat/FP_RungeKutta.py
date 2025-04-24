@@ -9,8 +9,6 @@ def rk4_solver_matrix(N, dt, steps, method='fourier'):
         D = np.array(D)
         x = np.array(x)
         u = np.exp(np.sin(x))
-        u_all = np.zeros((N_full, steps + 1))
-        u_all[:, 0] = u
         N_used = N_full
 
         def compute_rhs(u_in):
@@ -20,8 +18,6 @@ def rk4_solver_matrix(N, dt, steps, method='fourier'):
         L = 2 * np.pi
         x = np.linspace(0, L, N, endpoint=False)
         u = np.exp(np.sin(x))
-        u_all = np.zeros((N, steps + 1))
-        u_all[:, 0] = u
         dx = x[1] - x[0]
         N_used = N
 
@@ -29,13 +25,15 @@ def rk4_solver_matrix(N, dt, steps, method='fourier'):
             if method == 'fd2':
                 return -2 * np.pi * (np.roll(u_in, -1) - np.roll(u_in, 1)) / (2 * dx)
             elif method == 'fd4':
-                return -2 * np.pi * (-np.roll(u_in, 2) + 8 * np.roll(u_in, 1)
-                                     - 8 * np.roll(u_in, -1) + np.roll(u_in, -2)) / (12 * dx)
+                return -2 * np.pi * (np.roll(u_in, 2) - 8 * np.roll(u_in, 1)
+                                     + 8 * np.roll(u_in, -1) - np.roll(u_in, -2)) / (12 * dx)
+
 
     else:
         raise ValueError("Unknown method")
 
-    for n in range(steps):
+    # Time stepping without storing the entire u_all
+    for _ in range(steps):
         F = compute_rhs(u)
         u1 = u + 0.5 * dt * F
         F1 = compute_rhs(u1)
@@ -45,9 +43,8 @@ def rk4_solver_matrix(N, dt, steps, method='fourier'):
         F3 = compute_rhs(u3)
 
         u = (1.0 / 3.0) * (-u + u1 + 2 * u2 + u3 + 0.5 * dt * F3)
-        u_all[:, n + 1] = u
 
-    return u_all, x
+    return u, x
 
 
 def fourier_diff_matrix_float64(N, method):
@@ -73,8 +70,7 @@ def main():
     method = 'fourier'  # 'fd2', 'fd4', or 'fourier'
 
     # === Run RK4 solver ===
-    u_all, x = rk4_solver_matrix(N, dt, steps, method)
-    u_final = u_all[:, -1]
+    u_final, x = rk4_solver_matrix(N, dt, steps, method)
 
     # === Exact solution at t = T ===
     u_exact = np.exp(np.sin(x - 2 * np.pi * T))
