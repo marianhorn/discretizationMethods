@@ -24,10 +24,8 @@ def convergence_study_float64():
         print(f"\n--- Running parallel convergence study for method: {method} ---")
 
         # Skip large Ns for Fourier
-        if method == 'fourier':
-            N_vals = [N for N in N_vals_full if N < 512]
-        else:
-            N_vals = N_vals_full
+
+        N_vals = N_vals_full
 
         results = Parallel(n_jobs=-1, backend="multiprocessing")(
             delayed(simulate_one_case)(N, T, dt, method) for N in N_vals
