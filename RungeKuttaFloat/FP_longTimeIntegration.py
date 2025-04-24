@@ -25,10 +25,9 @@ def evaluate_long_time_transport_float64():
         for i, T in enumerate(times):
             print(f"  → Evaluating at t = {T}")
             steps = int(round(T / dt))
-            u_all, x = rk4_solver_matrix(N, dt, steps, method)
+            u_num, x = rk4_solver_matrix(N, dt, steps, method)
 
             u_exact = np.exp(np.sin(x - 2 * np.pi * T))
-            u_num = u_all[:, -1]
 
             axs[i].plot(x, u_num, 'bo-', label='Numerical')  # blue circles
             axs[i].plot(x, u_exact, 'r--x', label='Exact')    # red dashed line with x markers
