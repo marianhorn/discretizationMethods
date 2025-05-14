@@ -76,9 +76,9 @@ def exact_solution(x, t, nu, c):
 
 def main():
     global nu, c
-    N = 128
+    N = 64
     CFL = 0.01
-    T = np.pi/2
+    T = np.pi/4
     nu = 0.1
     c = 4.0
 
