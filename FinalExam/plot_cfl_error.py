@@ -14,7 +14,7 @@ def count_error(CFL, N, t_final=0.5, nu=0.1, c=4.0):
 
 def main():
     Ns = [16, 32, 64, 128, 256]
-    CFL_values = np.linspace(0.1, 2.0, 20)
+    CFL_values = np.linspace(0.1, 2.0, 40)
     t_final = 0.5
 
     plt.figure(figsize=(8, 6))
