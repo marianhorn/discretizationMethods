@@ -62,7 +62,7 @@ def solve_burgers_galerkin(CFL, N, t_final, nu=0.1, c=4.0):
     return x, u_final, u_exact
 
 if __name__ == "__main__":
-    CFL = 0.1
+    CFL = 0.5
     N = 32
     t_final = np.pi / 16
 
