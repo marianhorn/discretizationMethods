@@ -22,8 +22,8 @@ def exact_solution(x, t, nu, c=1.0):
 
 # Main solver function
 def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
-    dx = 2 * np.pi / (N + 1)
-    x = np.linspace(0, 2 * np.pi, N + 1, endpoint=False)
+    dx = 2 * np.pi / N
+    x = np.linspace(0, 2 * np.pi, N , endpoint=False)
     kmax = N // 2
 
     # Initial condition from exact solution at t = 0
@@ -31,16 +31,16 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
 
     # FFT helpers
     def compute_fourier_coeffs(u):
-        return np.fft.fft(u) / (N + 1)
+        return np.fft.fft(u) / N
 
     def u_from_coeffs(u_hat):
-        return np.fft.ifft(u_hat * (N + 1)).real
+        return np.fft.ifft(u_hat * N).real
 
     def spectral_derivatives(u_hat):
-        k = np.fft.fftfreq(N + 1, d=dx) * 2 * np.pi
+        k = np.fft.fftfreq(N , d=dx) * 2 * np.pi
         k = 1j * k
-        dudx = np.fft.ifft(k * u_hat * (N + 1)).real
-        d2udx2 = np.fft.ifft((k**2) * u_hat * (N + 1)).real
+        dudx = np.fft.ifft(k * u_hat * N).real
+        d2udx2 = np.fft.ifft((k**2) * u_hat * N).real
         return dudx, d2udx2
 
     def F(u_hat):
@@ -83,7 +83,7 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
 # Main runner
 def main():
     CFL = 2
-    N = 63
+    N = 64
     T = 1.0
     x, u_num, u_ex = solve_burgers_fourier_galerkin(CFL, N, T)
 
