@@ -1,0 +1,86 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameters
+N = 129  # Must be odd
+L = 2 * np.pi
+x = np.linspace(0, L, N, endpoint=False)
+dx = L / N
+
+nu = 0.1
+c = 4.0
+CFL = 0.8
+t_final = 0.5
+
+# Fourier differentiation matrix (correct formula)
+def fourier_collocation_matrix(x):
+    N = len(x)
+    D = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            if i != j:
+                D[i, j] = (-1)**(i + j) / (2 * np.sin((x[i] - x[j]) / 2))
+    return D
+
+D = fourier_collocation_matrix(x)
+D2 = D @ D
+
+# Analytical helper: phi function and its derivative
+def phi(a, b, terms=50):
+    sum_phi = np.zeros_like(a)
+    for k in range(-terms, terms+1):
+        sum_phi += np.exp(-((a - (2 * k + 1) * np.pi)**2) / (4 * nu * b))
+    return sum_phi
+
+def analytic_solution(x, t):
+    a = x - c * t
+    b = t + 1
+    phi_val = phi(a, b)
+    dphi_dx = (phi(a + 1e-6, b) - phi(a - 1e-6, b)) / (2e-6)
+    return c - 2 * nu * dphi_dx / phi_val
+
+# Initial condition from analytical solution at t = 0
+u = analytic_solution(x, 0)
+
+# RHS of Burgers’ equation
+def F(u):
+    return -u * (D @ u) + nu * (D2 @ u)
+
+# Adaptive time step
+def compute_dt(u):
+    umax = np.max(np.abs(u))
+    return CFL / (umax / dx + nu / dx**2)
+
+# Time integration using your custom Runge-Kutta scheme
+t = 0.0
+dt = compute_dt(u)
+
+while t < t_final:
+    if t + dt > t_final:
+        dt = t_final - t
+
+    F0 = F(u)
+    u1 = u + 0.5 * dt * F0
+    F1 = F(u1)
+    u2 = u + 0.5 * dt * F1
+    F2 = F(u2)
+    u3 = u + dt * F2
+    F3 = F(u3)
+
+    u = (1/3) * (-u + u1 + 2*u2 + u3 + 0.5 * dt * F3)
+    t += dt
+    dt = compute_dt(u)
+
+# Final analytical solution
+u_exact = analytic_solution(x, t_final)
+
+# Plot results
+plt.plot(x, u, label='Numerical', linewidth=2)
+plt.plot(x, u_exact, '--', label='Analytical', linewidth=2)
+plt.xlabel('x')
+plt.ylabel('u(x, t)')
+plt.title(f"Burgers\' Equation at t = {t_final}")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
