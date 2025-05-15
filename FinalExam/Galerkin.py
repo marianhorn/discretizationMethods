@@ -1,33 +1,35 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# φ and its x-derivative using finite difference
-def phi(a, b, nu, K=100):
+# φ from analytical solution
+def phi(a, b, nu, terms):
+    sum_phi = np.zeros_like(a)
+    for k in range(-terms, terms + 1):
+        sum_phi += np.exp(-((a - (2 * k + 1) * np.pi) ** 2) / (4 * nu * b))
+    return sum_phi
+def dphi_dx_analytical(a, b, nu, terms):
     result = np.zeros_like(a)
-    for k in range(-K, K + 1):
-        result += np.exp(-((a - (2 * k + 1) * np.pi) ** 2) / (4 * nu * b))
+    for k in range(-terms, terms + 1):
+        shift = a - (2 * k + 1) * np.pi
+        result += (-shift / (2 * nu * b)) * np.exp(-shift**2 / (4 * nu * b))
     return result
-
-def dphi_dx(a, b, nu, K=100):
-    h = 1e-6
-    return (phi(a + h, b, nu, K) - phi(a - h, b, nu, K)) / (2 * h)
-
-# Exact solution to Burgers’ equation
-def exact_solution(x, t, nu, c=1.0):
+# Exact solution using finite difference derivative of φ
+def analytic_solution(x, t, nu, c, terms):
     a = x - c * t
     b = t + 1
-    phi_val = phi(a, b, nu)
-    phi_val = np.maximum(phi_val, 1e-14)  # avoid division by small values
-    return c - 2 * nu * dphi_dx(a, b, nu) / phi_val
+    phi_val = phi(a, b, nu, terms)
+    dphi_val = dphi_dx_analytical(a, b, nu, terms)
+    phi_val = np.maximum(phi_val, 1e-14)
+    return c - 2 * nu * dphi_val / phi_val
 
-# Main solver function
-def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
+# Solver function
+def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0, terms=100):
     dx = 2 * np.pi / N
-    x = np.linspace(0, 2 * np.pi, N , endpoint=False)
+    x = np.linspace(0, 2 * np.pi, N, endpoint=False)
     kmax = N // 2
 
     # Initial condition from exact solution at t = 0
-    u0 = exact_solution(x, 0, nu, c)
+    u0 = analytic_solution(x, 0, nu, c, terms)
 
     # FFT helpers
     def compute_fourier_coeffs(u):
@@ -37,7 +39,7 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
         return np.fft.ifft(u_hat * N).real
 
     def spectral_derivatives(u_hat):
-        k = np.fft.fftfreq(N , d=dx) * 2 * np.pi
+        k = np.fft.fftfreq(N, d=dx) * 2 * np.pi
         k = 1j * k
         dudx = np.fft.ifft(k * u_hat * N).real
         d2udx2 = np.fft.ifft((k**2) * u_hat * N).real
@@ -62,11 +64,10 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
         umax = np.max(np.abs(u_phys))
         return CFL / (umax * kmax + nu * kmax**2)
 
-    # Initialize
+    # Initialize and time step
     u_hat = compute_fourier_coeffs(u0)
     t = 0.0
 
-    # Time stepping
     while t < T:
         u_phys = u_from_coeffs(u_hat)
         dt = compute_dt(u_phys)
@@ -76,7 +77,7 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0):
         t += dt
 
     u_num = u_from_coeffs(u_hat)
-    u_ex = exact_solution(x, T, nu, c)
+    u_ex = analytic_solution(x, T, nu, c, terms)
 
     return x, u_num, u_ex
 
@@ -85,7 +86,11 @@ def main():
     CFL = 2
     N = 64
     T = 1.0
-    x, u_num, u_ex = solve_burgers_fourier_galerkin(CFL, N, T)
+    nu = 0.1
+    c = 4.0
+    terms = 100
+
+    x, u_num, u_ex = solve_burgers_fourier_galerkin(CFL, N, T, nu=nu, c=c, terms=terms)
 
     plt.figure(figsize=(10, 5))
     plt.plot(x, u_num, label="Numerical (Fourier-Galerkin)", linewidth=2)

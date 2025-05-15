@@ -44,12 +44,19 @@ def solve_burgers(CFL, N, t_final, nu=0.1, c=4.0, terms=50):
             sum_phi += np.exp(-((a - (2 * k + 1) * np.pi) ** 2) / (4 * nu * b))
         return sum_phi
 
+    def dphi_dx_analytical(a, b, nu, terms):
+        result = np.zeros_like(a)
+        for k in range(-terms, terms + 1):
+            shift = a - (2 * k + 1) * np.pi
+            result += (-shift / (2 * nu * b)) * np.exp(-shift ** 2 / (4 * nu * b))
+        return result
     def analytic_solution(x, t):
         a = x - c * t
         b = t + 1
         phi_val = phi(a, b)
-        dphi_dx = (phi(a + 1e-6, b) - phi(a - 1e-6, b)) / (2e-6)
-        return c - 2 * nu * dphi_dx / phi_val
+        dphi_val = dphi_dx_analytical(a, b, nu, terms)
+        phi_val = np.maximum(phi_val, 1e-14)
+        return c - 2 * nu * dphi_val / phi_val
 
     # Initial condition from analytic solution
     u = analytic_solution(x, 0)
