@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from galerkin_solver import solve_burgers_fourier_galerkin  # Make sure this path matches your file
+from RKgalerkin import solve_burgers_fourier_galerkin  # Make sure this path matches your file
 
 # Compute max-norm error for given N and its max stable CFL
 def compute_error(N, CFL, t_final=np.pi / 4, nu=0.1, c=4.0, terms=100):
@@ -29,14 +29,14 @@ def compute_convergence_rates(Ns, errors):
 def main():
     Ns = [16, 32, 48, 64, 96, 128, 192, 256]
     CFL_table = {
-        16:  1.22,
-        32:  1.11,
-        48:  0.99,
-        64:  0.91,
-        96:  0.88,
-        128: 0.80,
-        192: 0.68,
-        256: 0.60,
+        16:  4.73,
+        32:  4.38,
+        48:  4.22,
+        64:  4.12,
+        96:  4.22,
+        128: 4.28,
+        192: 4.07,
+        256: 3.82,
     }
 
     t_final = np.pi / 4

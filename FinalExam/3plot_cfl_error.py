@@ -26,7 +26,7 @@ def detect_max_stable_cfl(CFL_values, errors, jump_threshold=1):
 
 def main():
     Ns = [16, 32, 48, 64, 96, 128, 192, 256]
-    CFL_values = np.linspace(0.1, 5.5, 50)
+    CFL_values = np.linspace(3, 5.5, 50)
     t_final = np.pi
     nu = 0.1
     c = 4.0
