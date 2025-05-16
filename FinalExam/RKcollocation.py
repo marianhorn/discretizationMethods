@@ -96,9 +96,9 @@ def solve_burgers(CFL, N, t_final, nu=0.1, c=4.0, terms=50):
 
 # Run the simulation with default parameters
 def main():
-    CFL = 1
+    CFL = 0.8
     N = 129
-    t_final = 1.0
+    t_final = 0.1
     x, u, u_exact = solve_burgers(CFL, N, t_final)
 
     # Plot results

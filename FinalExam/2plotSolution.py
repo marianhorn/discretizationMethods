@@ -4,7 +4,7 @@ from RKcollocation import solve_burgers
 # Task 2d
 def main():
     N = 128
-    CFL = 0.5
+    CFL = 0.8
     times = [0, np.pi / 8, np.pi / 6, np.pi / 4]
     labels = [r"$t = 0$", r"$t = \pi/8$", r"$t = \pi/6$", r"$t = \pi/4$"]
 
