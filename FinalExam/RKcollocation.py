@@ -3,28 +3,12 @@ import matplotlib.pyplot as plt
 
 
 def solve_burgers(CFL, N, t_final, nu=0.1, c=4.0, terms=50):
-    """
-    Solves Burgers' equation using Fourier collocation method and a custom RK scheme.
 
-    Parameters:
-        CFL     : CFL number for adaptive timestep
-        N       : Number of spatial grid points (must be odd)
-        t_final : Final time of the simulation
-        nu      : Viscosity (default 0.1)
-        c       : Parameter for analytic solution (default 4.0)
-        terms   : Number of terms in φ sum (default 50)
-
-    Returns:
-        x       : Grid points
-        u       : Numerical solution at t_final
-        u_exact : Analytical solution at t_final
-    """
     assert N % 2 == 1, "N must be odd"
     L = 2 * np.pi
     x = np.linspace(0, L, N, endpoint=False)
     dx = L / N
 
-    # Fourier collocation matrix
     def fourier_collocation_matrix(x):
         N = len(x)
         D = np.zeros((N, N))
@@ -37,7 +21,6 @@ def solve_burgers(CFL, N, t_final, nu=0.1, c=4.0, terms=50):
     D = fourier_collocation_matrix(x)
     D2 = D @ D
 
-    # φ function and its derivative (finite difference)
     def phi(a, b, terms=terms):
         sum_phi = np.zeros_like(a)
         for k in range(-terms, terms + 1):
@@ -58,19 +41,15 @@ def solve_burgers(CFL, N, t_final, nu=0.1, c=4.0, terms=50):
         phi_val = np.maximum(phi_val, 1e-14)
         return c - 2 * nu * dphi_val / phi_val
 
-    # Initial condition from analytic solution
     u = analytic_solution(x, 0)
 
-    # RHS of Burgers’ equation
     def F(u):
         return -u * (D @ u) + nu * (D2 @ u)
 
-    # Adaptive timestep
     def compute_dt(u):
         umax = np.max(np.abs(u))
         return CFL / (umax / dx + nu / dx ** 2)
 
-    # Time integration
     t = 0.0
     dt = compute_dt(u)
 
@@ -94,14 +73,12 @@ def solve_burgers(CFL, N, t_final, nu=0.1, c=4.0, terms=50):
     return x, u, u_exact
 
 
-# Run the simulation with default parameters
 def main():
     CFL = 0.8
     N = 129
     t_final = 0.1
     x, u, u_exact = solve_burgers(CFL, N, t_final)
 
-    # Plot results
     plt.plot(x, u, label='Numerical', linewidth=2)
     plt.plot(x, u_exact, '--', label='Analytical', linewidth=2)
     plt.xlabel('x')

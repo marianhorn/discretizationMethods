@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# φ from analytical solution
 def phi(a, b, nu, terms):
     sum_phi = np.zeros_like(a)
     for k in range(-terms, terms + 1):
@@ -13,7 +12,6 @@ def dphi_dx_analytical(a, b, nu, terms):
         shift = a - (2 * k + 1) * np.pi
         result += (-shift / (2 * nu * b)) * np.exp(-shift**2 / (4 * nu * b))
     return result
-# Exact solution using finite difference derivative of φ
 def analytic_solution(x, t, nu, c, terms):
     a = x - c * t
     b = t + 1
@@ -22,16 +20,13 @@ def analytic_solution(x, t, nu, c, terms):
     phi_val = np.maximum(phi_val, 1e-14)
     return c - 2 * nu * dphi_val / phi_val
 
-# Solver function
 def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0, terms=100):
     dx = 2 * np.pi / N
     x = np.linspace(0, 2 * np.pi, N, endpoint=False)
     kmax = N // 2
 
-    # Initial condition from exact solution at t = 0
     u0 = analytic_solution(x, 0, nu, c, terms)
 
-    # FFT helpers
     def compute_fourier_coeffs(u):
         return np.fft.fft(u) / N
 
@@ -64,7 +59,6 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0, terms=100):
         umax = np.max(np.abs(u_phys))
         return CFL / (umax * kmax + nu * kmax**2)
 
-    # Initialize and time step
     u_hat = compute_fourier_coeffs(u0)
     t = 0.0
 
@@ -81,7 +75,6 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0, terms=100):
 
     return x, u_num, u_ex
 
-# Main runner
 def main():
     CFL = 4
     N = 128

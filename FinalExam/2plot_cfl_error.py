@@ -4,7 +4,6 @@ from RKcollocation import solve_burgers
 
 # PART 2 b
 def count_error(CFL, N, t_final=0.5, nu=0.1, c=4.0):
-    """Run solver and return max-norm error for given CFL and N."""
     try:
         x, u, u_exact = solve_burgers(CFL=CFL, N=N+1, t_final=t_final, nu=nu, c=c)
         error = np.max(np.abs(u - u_exact))
@@ -40,7 +39,6 @@ def main():
             errors.append(error)
             print(f"  CFL={CFL:.2f}  Error={error:.2e}")
 
-        # Filter points with error < 5
         CFL_filtered = [cfl for cfl, err in zip(CFL_values, errors) if err < 5]
         errors_filtered = [err for err in errors if err < 5]
 
