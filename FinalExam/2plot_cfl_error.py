@@ -27,7 +27,7 @@ def detect_max_stable_cfl(CFL_values, errors, jump_threshold=1):
 
 def main():
     Ns = [16, 32, 48, 64, 96, 128, 192, 256]
-    CFL_values = np.linspace(0.1, 2.0, 50)
+    CFL_values = np.linspace(0.1, 1.5, 150)
     t_final = np.pi
 
     plt.figure(figsize=(8, 6))
@@ -44,7 +44,7 @@ def main():
         CFL_filtered = [cfl for cfl, err in zip(CFL_values, errors) if err < 5]
         errors_filtered = [err for err in errors if err < 5]
 
-        plt.plot(CFL_filtered, errors_filtered, label=f'N = {N}', marker='o')
+        plt.plot(CFL_filtered, errors_filtered, label=f'N = {N}', marker='')
 
     plt.xlabel("CFL number")
     plt.ylabel(r"$\|u_{\mathrm{numerical}} - u_{\mathrm{exact}}\|_\infty$")
