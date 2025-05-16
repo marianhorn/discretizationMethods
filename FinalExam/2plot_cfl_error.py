@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from RungeKutta import solve_burgers
+from RKcollocation import solve_burgers
 
 # PART 2 b
 def count_error(CFL, N, t_final=0.5, nu=0.1, c=4.0):

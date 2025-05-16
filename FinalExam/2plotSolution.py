@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from RungeKutta import solve_burgers
+from RKcollocation import solve_burgers
 # Task 2d
 def main():
     N = 128

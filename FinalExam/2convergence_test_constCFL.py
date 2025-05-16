@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from RungeKutta import solve_burgers
+from RKcollocation import solve_burgers
 # part 2c
 def compute_error(N, t_final=np.pi/4, CFL=0.5, nu=0.1, c=4.0):
     """Run the solver and return L-infinity error at t = t_final."""
