@@ -26,9 +26,8 @@ def compute_convergence_rates(Ns, errors):
     return rates
 
 def main():
-    #Ns = [16, 32, 48, 64, 96, 128, 192, 256]
-    Ns = [16, 32, 64, 128, 256, 512]
-    t_final = np.pi / 4
+    Ns = [16, 32, 48, 64, 96, 128, 192, 256]
+    t_final = np.pi/4
     CFL = 0.01
 
     errors = []

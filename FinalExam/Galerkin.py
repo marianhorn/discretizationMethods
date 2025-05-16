@@ -83,8 +83,8 @@ def solve_burgers_fourier_galerkin(CFL, N, T, nu=0.1, c=4.0, terms=100):
 
 # Main runner
 def main():
-    CFL = 2
-    N = 64
+    CFL = 4
+    N = 128
     T = 1.0
     nu = 0.1
     c = 4.0
