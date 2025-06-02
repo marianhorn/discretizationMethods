@@ -107,8 +107,8 @@ def parallel_likelihood_up_to_N(N_max, batch_size, checkpoints):
 
 # --- Main Execution Block ---
 if __name__ == '__main__':
-    N_vals = [10, 1000] + list(range(10000, 1000001, 10000))
-    checkpoints, likelihoods = parallel_likelihood_up_to_N(N_max=1000000, batch_size=1000, checkpoints=N_vals)
+    N_vals = [10, 1000] + list(range(100000, 10000001, 10000))
+    checkpoints, likelihoods = parallel_likelihood_up_to_N(N_max=10000000, batch_size=10000, checkpoints=N_vals)
 
     print(f"Final Likelihood (N = {checkpoints[-1]}): {likelihoods[-1]:.6f}")
 
